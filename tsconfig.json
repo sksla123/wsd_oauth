@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "composite": true,
     "baseUrl": ".",        // 기본 경로 설정
     "paths": {

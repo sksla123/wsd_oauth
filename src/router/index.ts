@@ -1,5 +1,6 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
 import SignIn from '@/vue/SignIn.vue';
+import KakaoCallback from '@/vue/KakaoCallback.vue';
 import Home from "../vue/home.vue";
 
 const routes = [
@@ -36,6 +37,11 @@ const routes = [
         name: 'SignIn', // name 추가
         component: SignIn,
     },
+    {
+        path: '/oauth/kakao/callback',
+        name: 'KakaoCallback',
+        component: KakaoCallback,
+    },
 ]
 
 const router = createRouter({
@@ -46,7 +52,9 @@ const router = createRouter({
 router.beforeEach((to, _from, next): void => {
     const isAuthenticated = localStorage.getItem('TMDb-Key') !== null;
 
-    if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (to.name === 'KakaoCallback') {
+        next(); // 카카오 콜백은 항상 허용
+    } else if (to.matched.some(record => record.meta.requiresAuth)) {
         // If the route requires authentication and the user is not authenticated
         if (!isAuthenticated) {
             next({ name: 'SignIn' }); // Redirect to the SignIn page

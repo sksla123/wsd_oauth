@@ -7,6 +7,7 @@
         <div id="content-wrapper">
           <div :class="['card', { hidden: !isLoginVisible }]" id="login">
             <form @submit.prevent="handleLogin">
+            <!-- <form> -->
               <h1>Sign in</h1>
               <div class="input" :class="{ 'active': isEmailFocused || email }">
                 <input id="email" type="email" v-model="email" @focus="focusInput('email')" @blur="blurInput('email')">
@@ -16,14 +17,21 @@
                 <input id="password" type="password" v-model="password" @focus="focusInput('password')" @blur="blurInput('password')">
                 <label for="password">Password</label>
               </div>
-              <span class="checkbox remember">
+              <span class="checkbox remember">``
               <input type="checkbox" id="remember" v-model="rememberMe">
               <label for="remember" class="read-text">Remember me</label>
             </span>
               <span class="checkbox forgot">
               <a href="#">Forgot Password?</a>
             </span>
-              <button :disabled="!isLoginFormValid">Login</button>
+              <div class="button-container">
+                <div class="button-wrapper">
+                  <button type="submit" class="login-button">Login</button>
+                </div>
+                <div class="button-wrapper">
+                  <button type="button" class="kakao-button" @click="handleKakaoLogin">Kakao Login</button>
+                </div>
+              </div>
             </form>
             <a href="javascript:void(0)" class="account-check" @click="toggleCard">Already an account? <b>Sign in</b></a>
           </div>
@@ -59,7 +67,7 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import {tryLogin, tryRegister} from "@/script/auth/Authentication.js";
+import {tryLogin, tryKakaoLogin, tryRegister} from "@/script/auth/Authentication.js";
 import { useRouter } from 'vue-router'
 
 
@@ -67,6 +75,7 @@ export default {
   setup() {
     const isLoginVisible = ref(true) // should be changed to true
     const email = ref('')
+
     const password = ref('')
     const registerEmail = ref('')
     const registerPassword = ref('')
@@ -141,6 +150,53 @@ export default {
       )
     }
 
+    const handleKakaoLogin = () => {
+      console.log("Kakao login function started");
+      
+      // Kakao SDK가 로드되었는지 확인
+      if (!window.Kakao) {
+        console.error("Kakao SDK not loaded");
+        alert("카카오 로그인을 위한 준비가 되지 않았습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      // Kakao SDK 초기화
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(__APP_KAKAO_CLIENT_ID__);
+      }
+
+      // Kakao 로그인 요청
+      window.Kakao.Auth.login({
+        success: function(authObj) {
+          console.log("Kakao login success", authObj);
+          
+          // 액세스 토큰으로 사용자 정보 요청
+          window.Kakao.API.request({
+            url: '/v2/user/me',
+            success: function(res) {
+              console.log("Kakao user info", res);
+              
+              // 여기서 백엔드로 사용자 정보를 전송하거나 로컬 상태를 업데이트
+              localStorage.setItem('TMDb-Key', __APP_TMDB_API_KEY__);
+              // localStorage.setItem('TMDb-Key', authObj.access_token);
+              localStorage.setItem('kakaoUserInfo', JSON.stringify(res));
+              
+              // 로그인 성공 후 메인 페이지로 리다이렉트
+              router.push('/');
+            },
+            fail: function(error) {
+              console.error("Failed to get Kakao user info", error);
+              alert("카카오 사용자 정보를 가져오는데 실패했습니다.");
+            }
+          });
+        },
+        fail: function(err) {
+          console.error("Kakao login failed", err);
+          alert("카카오 로그인에 실패했습니다.");
+        }
+      });
+    };
+
     const handleRegister = () => {
       tryRegister(
           registerEmail.value,
@@ -159,7 +215,7 @@ export default {
       rememberMe, acceptTerms, isEmailFocused, isPasswordFocused, isRegisterEmailFocused,
       isRegisterPasswordFocused, isConfirmPasswordFocused, cursorStyle, hours, minutes, ampm,
       isLoginFormValid, isRegisterFormValid, toggleCard, focusInput, blurInput,
-      handleLogin, handleRegister
+      handleLogin, handleRegister, handleKakaoLogin
     }
   }
 }
@@ -290,6 +346,18 @@ h1 {
   color:#272727;
 }
 
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.button-wrapper {
+  flex: 1;
+  padding: 0 10px;
+}
+
 button {
   display:block;
   border-radius:50px;
@@ -306,6 +374,13 @@ button {
 
 button:hover {
   box-shadow: 0px 2px 10px rgba(23,83,209,0.4)
+}
+
+.kakao-button {
+  font-size: 18px;
+  background-color: yellow;
+  color: brown;
+  font-weight: bold;
 }
 
 .input {
@@ -439,9 +514,7 @@ button:hover {
   padding:27px 30px 46px 30px;
   box-shadow: 0 5px 10px rgba(0,0,0,0.16);
   transition: all 0.4s 0.1s ease;
-
   top: 50%;
-
   left: 50%;
   transform: translateX(-50%);
 }
@@ -494,7 +567,6 @@ button:hover {
   background-color:#2069ff;
   box-shadow: 0px 20px 40px rgba(23,83,209,0.8);
   padding:0px 30px 0px 30px;
-
 }
 
 #register.hidden form {

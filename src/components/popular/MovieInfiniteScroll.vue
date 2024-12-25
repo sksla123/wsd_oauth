@@ -22,15 +22,15 @@
 <script lang="ts">
 import {ref, computed, onMounted, onUnmounted, defineComponent, watch} from 'vue';
 import axios from 'axios';
-import {useWishlist} from "@/script/movie/wishlist.ts";
+import {useWishlist} from "../../script/movie/wishlist.ts";
 
 interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
-  original_language: string;
-  vote_average: number;
-  // Add other relevant movie properties
+    id: number;
+    title: string;
+    poster_path: string;
+    original_language: string;
+    vote_average: number;
+    // Add other relevant movie properties
 }
 
 export default defineComponent({
@@ -57,7 +57,8 @@ export default defineComponent({
     }
   },
   setup(props) {
-    const movies = ref<Movie[]>([]);
+    const movies = ref<any[]>([]);
+    // const movies = ref<Movie[]>([]);
     const currentPage = ref(1);
     const gridContainer = ref<HTMLElement | null>(null);
     const loadingTrigger = ref<HTMLElement | null>(null);

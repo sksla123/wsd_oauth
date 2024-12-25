@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MovieGrid from "@/components/popular/MovieTable.vue";
-import { getURL4PopularMovies } from "@/script/movie/URL.ts";
+import { getURL4PopularMovies } from "../script/movie/URL.ts";
 import {defineComponent, onMounted, ref} from "vue";
 import { faTh, faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';

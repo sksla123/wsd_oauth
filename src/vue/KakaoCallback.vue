@@ -7,7 +7,7 @@
   
   <script lang="ts">
   import { defineComponent } from 'vue';
-  import { tryKakaoLogin } from '@/script/auth/Authentication.js';
+  import { tryKakaoLogin } from '../script/auth/Authentication.js';
   
   export default defineComponent({
     name: 'KakaoCallback',

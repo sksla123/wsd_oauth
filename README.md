@@ -19,7 +19,7 @@ https://github.com/JBNU-Teaching/24-02-WSD-Assignment-02-Vue-Demo
 **반드시 환경 변수 파일을 만든 후 실행하세요.(없을 시 제대로된 동작을 보장하지 못함)**
 ```
 IP_ADDRESS=localhost // (package.json 파일에 설정된 모드별 host 확인)
-PORT=3000 (package.json 파일에 설정된 모드별 port 확인)
+PORT=3000 (package.json 파일에 설정된 모드별 port 확인, !포트포워딩 규칙 확인)
 TMDB_API_KEY=your-tmdb-api-key
 APP_REDIRECT_URL=kakao-callback-redirect-url
 APP_KAKAO_CLIENT_ID=kakao-javascript-sdk-api-key
@@ -33,8 +33,16 @@ npm run dev
 ### 프로덕션 모드 실행(빌드된 애플리케이션)
 ```
 npm run build // 애플리케이션 빌드
-npm run preview // 빌드된 애플리케이션 배포
+npm run preview // 빌드된 애플리케이션 배포 (preview는 3000번 포트에서 진행됩니다.)
 ```
+
+### nginx 배포
+```
+// sudo systemctl status nginx로 nginx 실행 여부 확인 필수, 만약 실행되어있지 않다면 반드시 실행시킬 것.
+sudo systemctl start nginx 
+```
+
+### 배포
 
 ## 프론트 엔드
 ### 로그인 페이지에 구현된 카카오 로그인 버튼

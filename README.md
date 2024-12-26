@@ -5,7 +5,7 @@ JBNU-Teaching/24-02-WSD-Assignment-02-Vue-Demo를 기반으로 구현하였습�
 
 https://github.com/JBNU-Teaching/24-02-WSD-Assignment-02-Vue-Demo
 
-**현재 Jcloud를 통해 배포되어 있습니다. (배포주소 깃허브 미공개)**
+**현재 Jcloud를 통해 배포되어 있습니다. (깃허브에는 배포주소 미공개)**
 ```
 배포주소: http://미공개/WSD_OAUTH/
 ```

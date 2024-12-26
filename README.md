@@ -42,8 +42,6 @@ npm run preview // 빌드된 애플리케이션 배포 (preview는 3000번 포�
 sudo systemctl start nginx 
 ```
 
-### 배포
-
 ## 프론트 엔드
 ### 로그인 페이지에 구현된 카카오 로그인 버튼
 ![image](https://github.com/user-attachments/assets/1b775b1d-ff57-4f7c-b665-49707fdcf561)

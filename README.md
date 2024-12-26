@@ -1,5 +1,31 @@
-# Vue 3 + TypeScript + Vite
+# Oauth 카카오 로그인 구현 프로젝트
+웹설계 디자인 용으로 구현한 Oauth 카카오 로그인 구현 프로젝트입니다.
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+JBNU-Teaching/24-02-WSD-Assignment-02-Vue-Demo를 기반으로 구현하였습니다.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+https://github.com/JBNU-Teaching/24-02-WSD-Assignment-02-Vue-Demo
+
+- 현재 Jcloud를 통해 배포되어 있습니다. (배포주소 미공개)
+
+## 프로젝트 실행 하는 법
+실행 모드가 분리 되어있습니다. **(환경변수가 다르게 설정됨.)**
+
+## 프론트엔드 구성
+### 카카오 로그인 버튼
+
+### 로그인 클릭 시 UI
+
+### 로그인/로그아웃 시 헤더 UI 변경
+
+**로그아웃 UI는 구현했지만, 자동으로 로그인 페이지로 이동하기 때문에 볼 수 없을 것**
+
+## 카카오 로그인/로그아웃
+### 로그인 코드
+
+### 카카오 로그인 성공 시 출력되는 로그
+
+- 프로필 표시를 위해 email을 받고 싶었으나, 이메일의 경우 카카오에 검토 신청을 보내야하기 때문에 안받기로 결정함.
+
+### 로그아웃 코드
+
+### 카카오 로그아웃 성공 시 출력되는 로그

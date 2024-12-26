@@ -19,260 +19,170 @@
   </div>
 </template>
 
-<script lang="ts">
-import {ref, computed, onMounted, onUnmounted, defineComponent, watch} from 'vue';
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import axios from 'axios';
-import {useWishlist} from "../../script/movie/wishlist.ts";
+import { useWishlist } from "../../script/movie/wishlist";
 
 interface Movie {
-    id: number;
-    title: string;
-    poster_path: string;
-    original_language: string;
-    vote_average: number;
-    // Add other relevant movie properties
+  id: number;
+  title: string;
+  poster_path: string;
+  original_language: string;
+  vote_average: number;
 }
 
-export default defineComponent({
-  name: 'MovieGrid',
-  props: {
-    genreCode : {
-      type: String,
-      required: true
-    },
-    apiKey: {
-      type: String,
-      required: true
-    },
-    sortingOrder: {
-      type: String,
-      required: true,
-      default: 'all'
-    },
-    voteEverage: {
-      type: Number,
-      required: true,
-      default: 100
+const props = defineProps<{
+  genreCode: string;
+  apiKey: string;
+  sortingOrder: string;
+  voteAverage: number;
+}>();
 
+const movies = ref<Movie[]>([]);
+const currentPage = ref(1);
+const gridContainer = ref<HTMLElement | null>(null);
+const loadingTrigger = ref<HTMLElement | null>(null);
+const rowSize = ref(4);
+const isLoading = ref(false);
+const isMobile = ref(window.innerWidth <= 768);
+const currentView = ref('grid');
+const hasMore = ref(true);
+const showTopButton = ref(false);
+let observer: IntersectionObserver | null = null;
+
+const { loadWishlist, toggleWishlist, isInWishlist } = useWishlist();
+
+const fetchMovies = async (): Promise<void> => {
+  if (isLoading.value || !hasMore.value) return;
+  isLoading.value = true;
+
+  try {
+    const endpoint = props.genreCode === "0" ? 'movie/popular' : 'discover/movie';
+    const response = await axios.get<{ results: Movie[] }>(
+      `https://api.themoviedb.org/3/${endpoint}`,
+      {
+        params: {
+          api_key: props.apiKey,
+          language: 'ko-KR',
+          page: currentPage.value,
+          per_page: 10,
+          ...(props.genreCode !== "0" && { with_genres: props.genreCode })
+        }
+      }
+    );
+
+    const newMovies = response.data.results;
+    if (newMovies.length > 0) {
+      const filteredMovies = filterMovies([...movies.value, ...newMovies]);
+      movies.value = filteredMovies;
+      currentPage.value++;
+    } else {
+      hasMore.value = false;
     }
-  },
-  setup(props) {
-    const movies = ref<any[]>([]);
-    // const movies = ref<Movie[]>([]);
-    const currentPage = ref(1);
-    const gridContainer = ref<HTMLElement | null>(null);
-    const loadingTrigger = ref<HTMLElement | null>(null);
-    const rowSize = ref(4);
-    const isLoading = ref(false);
-    const isMobile = ref(window.innerWidth <= 768);
-    const currentView = ref('grid');
-    const hasMore = ref(true);
-    const showTopButton = ref(false);
-    let wishlistTimer: number | null = null;
+  } catch (error) {
+    console.error('Error fetching movies:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
-    watch(() => props.genreCode, () => {
-      resetMovies();
+const filterMovies = (movieArray: Movie[]): Movie[] => {
+  return movieArray
+    .filter(movie => props.sortingOrder === 'all' || movie.original_language === props.sortingOrder)
+    .filter(movie => {
+      if (props.voteAverage === -1) return true;
+      if (props.voteAverage === -2) return movie.vote_average <= 4;
+      return movie.vote_average >= props.voteAverage && movie.vote_average < props.voteAverage + 1;
     });
+};
 
-    watch(() => props.sortingOrder, () => {
-      resetMovies();
-    });
+const resetMovies = (): void => {
+  movies.value = [];
+  currentPage.value = 1;
+  hasMore.value = true;
+  fetchMovies();
+};
 
-    watch(() => props.voteEverage, () => {
-      resetMovies();
-    });
+watch(() => [props.genreCode, props.sortingOrder, props.voteAverage], resetMovies);
 
-    // Use the wishlist composable
-    const {  loadWishlist, toggleWishlist, isInWishlist } = useWishlist();
+const getImageUrl = (path: string | null): string => {
+  return path ? `https://image.tmdb.org/t/p/w300${path}` : '/placeholder-image.jpg';
+};
 
-    const fetchMovies = async (): Promise<void> => {
-      if (isLoading.value || !hasMore.value) return;
+const calculateLayout = (): void => {
+  if (gridContainer.value) {
+    const containerWidth = gridContainer.value.offsetWidth;
+    const movieCardWidth = isMobile.value ? 100 : 300;
+    const horizontalGap = isMobile.value ? 10 : 15;
+    rowSize.value = Math.floor(containerWidth / (movieCardWidth + horizontalGap));
+  }
+};
 
-      isLoading.value = true;
-      let response = null;
-      try {
-        if (props.genreCode === "0") {
-          response = await axios.get<{ results: Movie[] }>(
-              `https://api.themoviedb.org/3/movie/popular`, {
-                params: {
-                  api_key: props.apiKey,
-                  language: 'ko-KR',
-                  page: currentPage.value,
-                  per_page: 10
-                }
-              }
-          );
-        } else {
-          response = await axios.get<{ results: Movie[] }>(
-              `https://api.themoviedb.org/3/discover/movie`, {
-                params: {
-                  api_key: props.apiKey,
-                  with_genres: props.genreCode,
-                  language: 'ko-KR',
-                  page: currentPage.value,
-                  per_page: 10
-                }
-              }
-          );
-        }
+const visibleMovieGroups = computed(() => {
+  return movies.value.reduce<Movie[][]>((resultArray, item, index) => {
+    const groupIndex = Math.floor(index / rowSize.value);
+    if (!resultArray[groupIndex]) {
+      resultArray[groupIndex] = [];
+    }
+    resultArray[groupIndex].push(item);
+    return resultArray;
+  }, []);
+});
 
-        const newMovies = response.data.results;
-        if (newMovies.length > 0) {
-          let movieArray = [...movies.value, ...newMovies];
+const handleResize = (): void => {
+  isMobile.value = window.innerWidth <= 768;
+  calculateLayout();
+};
 
-          if (props.sortingOrder !== 'all') {
-            movieArray = movieArray.filter((movie) => movie.original_language === props.sortingOrder);
-          }
+const checkAndLoadMore = (): void => {
+  if (!gridContainer.value) return;
+  const lastRow = gridContainer.value.lastElementChild;
+  if (!lastRow) return;
+  const containerBottom = gridContainer.value.getBoundingClientRect().bottom;
+  const lastRowBottom = lastRow.getBoundingClientRect().bottom;
+  if (containerBottom >= lastRowBottom - 100 && !isLoading.value && hasMore.value) {
+    fetchMovies();
+  }
+};
 
-          movieArray = movieArray.filter((movie) => {
-            let result = false;
+const handleScroll = (): void => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  showTopButton.value = scrollTop > 300;
+  checkAndLoadMore();
+};
 
-            if (props.voteEverage === -1) result = true;
-            else if(props.voteEverage === -2) result = movie.vote_average <= 4;
-            else result = movie.vote_average >= props.voteEverage && movie.vote_average < props.voteEverage + 1;
+const scrollToTopAndReset = (): void => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  resetMovies();
+};
 
-            return result;
-          });
+onMounted(() => {
+  fetchMovies().then(checkAndLoadMore);
+  calculateLayout();
+  loadWishlist();
+  window.addEventListener('resize', handleResize);
+  window.addEventListener('scroll', handleScroll);
 
-          movies.value = movieArray;
-
-          currentPage.value++;
-        } else {
-          hasMore.value = false;
-        }
-      } catch (error) {
-        console.error('Error fetching movies:', error);
-      } finally {
-        isLoading.value = false;
-      }
-    };
-
-    const getImageUrl = (path: string | null): string => {
-      return path ? `https://image.tmdb.org/t/p/w300${path}` : '/placeholder-image.jpg';
-    };
-
-    const calculateLayout = (): void => {
-      if (gridContainer.value) {
-        const containerWidth = gridContainer.value.offsetWidth;
-        const movieCardWidth = isMobile.value ? 100 : 300;
-        const horizontalGap = isMobile.value ? 10 : 15;
-
-        rowSize.value = Math.floor(containerWidth / (movieCardWidth + horizontalGap));
-      }
-    };
-
-    const visibleMovieGroups = computed(() => {
-      return movies.value.reduce<Movie[][]>((resultArray, item, index) => {
-        const groupIndex = Math.floor(index / rowSize.value);
-        if (!resultArray[groupIndex]) {
-          resultArray[groupIndex] = [];
-        }
-        resultArray[groupIndex].push(item);
-        return resultArray;
-      }, []);
-    });
-
-    const handleResize = (): void => {
-      isMobile.value = window.innerWidth <= 768;
-      calculateLayout();
-    };
-
-    const checkAndLoadMore = (): void => {
-      if (!gridContainer.value) return;
-
-      const lastRow = gridContainer.value.lastElementChild;
-      if (!lastRow) return;
-
-      const containerBottom = gridContainer.value.getBoundingClientRect().bottom;
-      const lastRowBottom = lastRow.getBoundingClientRect().bottom;
-
-      if (containerBottom >= lastRowBottom - 100 && !isLoading.value && hasMore.value) {
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && !isLoading.value && hasMore.value) {
         fetchMovies();
       }
-    };
+    },
+    { rootMargin: '100px', threshold: 0.1 }
+  );
 
-    const handleScroll = (): void => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      showTopButton.value = scrollTop > 300;
-      checkAndLoadMore();
-    };
+  if (loadingTrigger.value) {
+    observer.observe(loadingTrigger.value);
+  }
+});
 
-    const resetMovies = (): void => {
-      movies.value = [];
-      currentPage.value = 1;
-      hasMore.value = true;
-      fetchMovies();
-    };
-
-    const scrollToTopAndReset = (): void => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      resetMovies();
-    };
-
-    const startWishlistTimer = (movie: Movie): void => {
-      clearWishlistTimer();
-      wishlistTimer = window.setTimeout(() => {
-        toggleWishlist(movie);
-      }, 800);
-    };
-
-    const clearWishlistTimer = (): void => {
-      if (wishlistTimer !== null) {
-        clearTimeout(wishlistTimer);
-        wishlistTimer = null;
-      }
-    };
-
-    onMounted(() => {
-      fetchMovies().then(() => {
-        checkAndLoadMore();
-      });
-      calculateLayout();
-      loadWishlist();
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('scroll', handleScroll);
-
-      const observer = new IntersectionObserver(
-          (entries) => {
-            if (entries[0].isIntersecting && !isLoading.value && hasMore.value) {
-              fetchMovies();
-            }
-          },
-          { rootMargin: '100px', threshold: 0.1 }
-      );
-
-      if (loadingTrigger.value) {
-        observer.observe(loadingTrigger.value);
-      }
-
-      onUnmounted(() => {
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('scroll', handleScroll);
-        if (loadingTrigger.value) {
-          observer.unobserve(loadingTrigger.value);
-        }
-      });
-    });
-
-    return {
-      visibleMovieGroups,
-      getImageUrl,
-      gridContainer,
-      loadingTrigger,
-      rowSize,
-      isLoading,
-      currentView,
-      hasMore,
-      showTopButton,
-      scrollToTopAndReset,
-      startWishlistTimer,
-      clearWishlistTimer,
-      toggleWishlist,
-      isInWishlist
-    };
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  window.removeEventListener('scroll', handleScroll);
+  if (loadingTrigger.value && observer) {
+    observer.unobserve(loadingTrigger.value);
   }
 });
 </script>

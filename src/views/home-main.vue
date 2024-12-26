@@ -23,7 +23,7 @@ export default {
   },
   data() {
     return {
-      apiKey: localStorage.getItem('TMDb-Key') || '',
+      apiKey: __APP_TMDB_API_KEY__ || '',
       featuredMovie: null,
       popularMoviesUrl: '',
       newReleasesUrl: '',

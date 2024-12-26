@@ -67,7 +67,7 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import {tryLogin, tryKakaoLogin, tryRegister} from "@/script/auth/Authentication.js";
+import {tryLogin, tryRegister} from "@/script/auth/Authentication.js";
 import { useRouter } from 'vue-router'
 
 
@@ -177,8 +177,7 @@ export default {
               console.log("Kakao user info", res);
               
               // 여기서 백엔드로 사용자 정보를 전송하거나 로컬 상태를 업데이트
-              localStorage.setItem('TMDb-Key', __APP_TMDB_API_KEY__);
-              // localStorage.setItem('TMDb-Key', authObj.access_token);
+              localStorage.setItem('logined_user', res.properties.nickname);
               localStorage.setItem('kakaoUserInfo', JSON.stringify(res));
               
               // 로그인 성공 후 메인 페이지로 리다이렉트

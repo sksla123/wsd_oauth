@@ -16,9 +16,17 @@
         </nav>
       </div>
       <div class="header-right">
-        <button class="icon-button" @click="removeKey">
-          <font-awesome-icon :icon="['fas', 'user']" />
-        </button>
+        <div class="profile-dropdown">
+          <button class="icon-button" @click="toggleDropdown">
+            <font-awesome-icon :icon="['fas', 'user']" />
+          </button>
+          <div v-if="isDropdownOpen" class="dropdown-content">
+            <p v-if="loginedUser">{{ loginedUser }}</p>
+            <p v-else>로그인 해주세요</p>
+            <button v-if="loginedUser" @click="logout" class="logout-button">로그아웃</button>
+            <button v-else @click="login" class="login-button">로그인</button>
+          </div>
+        </div>
         <button class="icon-button mobile-menu-button" @click="toggleMobileMenu">
           <font-awesome-icon :icon="['fas', 'bars']" />
         </button>
@@ -33,7 +41,6 @@
       <nav>
         <ul>
           <li><a href="/#/" @click="toggleMobileMenu">홈</a></li>
-          <li><a href="/#/popular" @click="toggleMobileMenu">대세 콘텐츠</a></li>
           <li><a href="/#/search" @click="toggleMobileMenu">찾아보기</a></li>
           <li><a href="/#/wishlist" @click="toggleMobileMenu">내가 찜한 리스트</a></li>
         </ul>
@@ -57,13 +64,43 @@ export default {
   data() {
     return {
       isScrolled: false,
-      isMobileMenuOpen: false
+      isMobileMenuOpen: false,
+      isDropdownOpen: false,
+      loginedUser: null
     }
   },
   methods: {
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
+      this.loginedUser = localStorage.getItem('logined_user');
+    },
+    logout() {
+      this.removeKey();
+    },
+    login() {
+      this.removeKey();
+    },
     removeKey() {
-      localStorage.removeItem('TMDb-Key');
+      localStorage.removeItem('logined_user');
+
+      // 카카오 로그아웃 실행
+      this.kakaoLogout();
+
+      // localStorage에서 'kakao'로 시작하는 모든 키 삭제
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('kakao')) {
+          localStorage.removeItem(key);
+        }
+      });
+
       this.$router.push('/signin');
+    },
+    kakaoLogout() {
+      if (window.Kakao && window.Kakao.Auth.getAccessToken()) {
+        window.Kakao.Auth.logout(() => {
+          console.log('카카오 로그아웃 완료');
+        });
+      }
     },
     toggleMobileMenu() {
       this.isMobileMenuOpen = !this.isMobileMenuOpen;
@@ -198,6 +235,41 @@ export default {
   color: white;
   font-size: 1.5rem;
   cursor: pointer;
+}
+
+.profile-dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: #000;
+  min-width: 150px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  padding: 10px;
+}
+
+.dropdown-content p {
+  color: white;
+  padding: 5px 0;
+  margin: 0;
+}
+
+.logout-button, .login-button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  background-color: #E50914;
+  color: black;
+  border: none;
+  cursor: pointer;
+}
+
+.logout-button:hover, .login-button:hover {
+  opacity: 0.8;
 }
 
 @media (max-width: 768px) {

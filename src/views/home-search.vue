@@ -2,7 +2,10 @@
 import MovieSearch from "@/components/search/MovieSearch.vue";
 import MovieInfiniteScroll from "@/components/popular/MovieInfiniteScroll.vue";
 import {ref} from "vue";
-const apiKey = localStorage.getItem('TMDb-Key') || '';
+
+declare const __APP_TMDB_API_KEY__: string;
+
+const apiKey = __APP_TMDB_API_KEY__ || '';
 
 const genreId = ref('28');
 const ageId = ref(-1);
@@ -55,7 +58,7 @@ const changeOptions = (options: { originalLanguage: string, translationLanguage:
           :api-key="apiKey"
           :genre-code="genreId"
           :sorting-order="sortId"
-          :vote-everage="ageId"
+          :voteAverage="ageId"
       />
     </div>
   </div>

@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import MovieGrid from "@/components/popular/MovieTable.vue";
-import { getURL4PopularMovies } from "../script/movie/URL.ts";
+import { getURL4PopularMovies } from "../script/movie/URL";
 import {defineComponent, onMounted, ref} from "vue";
 import { faTh, faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import MovieInfiniteScroll from "@/components/popular/MovieInfiniteScroll.vue";
+// import MovieInfiniteScroll from "@/components/popular/MovieInfiniteScroll.vue";
+
+declare const __APP_TMDB_API_KEY__: string;
 
 library.add(faTh, faBars);
-
 
 defineComponent({
   components: {
@@ -16,7 +17,7 @@ defineComponent({
   }
 });
 
-const apiKey = localStorage.getItem('TMDb-Key') || '';
+const apiKey = __APP_TMDB_API_KEY__ || '';
 const fetchURL = getURL4PopularMovies(apiKey);
 
 const currentView = ref('grid');
@@ -35,6 +36,7 @@ const enableScroll = () => {
 };
 
 onMounted(() => {
+  // console.log(__APP_TMDB_API_KEY__);
   disableScroll();
 })
 </script>
@@ -60,11 +62,11 @@ onMounted(() => {
         title="인기 영화"
         :fetchUrl="fetchURL"
     />
-    <MovieInfiniteScroll
+    <!-- <MovieInfiniteScroll
         v-if="currentView === 'list'"
         title="인기 영화"
         :fetchUrl="fetchURL"
-    />
+    /> -->
   </div>
 </template>
 

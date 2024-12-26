@@ -20,6 +20,10 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src')
       }
     },
+    build: {
+      outDir: 'dist/WSD-OAUTH', // 빌드 결과물이 이 폴더에 저장됨
+      assetsDir: 'assets', // assets 폴더가 이 안에 생성됨
+    },
     define: {
       __APP_IP__: JSON.stringify(process.env.IP_ADDRESS),
       __APP_PORT__: JSON.stringify(process.env.PORT),

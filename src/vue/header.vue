@@ -81,26 +81,25 @@ export default {
       this.removeKey();
     },
     removeKey() {
-      localStorage.removeItem('logined_user');
+      // 카카오 로그아웃 처리
+      if (window.Kakao && window.Kakao.Auth.getAccessToken()) {
+        window.Kakao.Auth.logout(() => {
+          console.log('카카오 로그아웃 완료');
+        });
+      }
 
-      // 카카오 로그아웃 실행
-      this.kakaoLogout();
-
-      // localStorage에서 'kakao'로 시작하는 모든 키 삭제
+      // localStorage에서 kakao로 시작하는 모든 키 삭제
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('kakao')) {
           localStorage.removeItem(key);
         }
       });
 
+      // 기존 로그인 정보 삭제
+      localStorage.removeItem('logined_user');
+
+      // 로그인 페이지로 리다이렉트
       this.$router.push('/signin');
-    },
-    kakaoLogout() {
-      if (window.Kakao && window.Kakao.Auth.getAccessToken()) {
-        window.Kakao.Auth.logout(() => {
-          console.log('카카오 로그아웃 완료');
-        });
-      }
     },
     toggleMobileMenu() {
       this.isMobileMenuOpen = !this.isMobileMenuOpen;
@@ -111,6 +110,11 @@ export default {
   },
   mounted() {
     window.addEventListener('scroll', this.handleScroll);
+    
+    // Kakao SDK 초기화
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(__APP_KAKAO_CLIENT_ID__);
+    }
   },
   beforeUnmount() {
     window.removeEventListener('scroll', this.handleScroll);
